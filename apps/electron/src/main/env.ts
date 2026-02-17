@@ -6,6 +6,66 @@ import { saveState } from "./persistState";
 import { getSettings } from "./settings";
 
 /**
+ * Check if an env file is a private override file (ends with .private).
+ * Private env files contain sensitive/user-specific values and are:
+ * - Excluded from the env selection UI
+ * - Automatically loaded as overrides when their parent env is active
+ * - Expected to be .gitignored
+ */
+function isPrivateEnvFile(filePath: string): boolean {
+  return path.basename(filePath).endsWith(".private");
+}
+
+/**
+ * Build a merged environment by applying the full hierarchy chain.
+ *
+ * When hierarchy is enabled and activeEnvPath is e.g. /project/.env.staging:
+ *   1. .env           (base)
+ *   2. .env.private   (base private overrides)
+ *   3. .env.staging   (environment-specific)
+ *   4. .env.staging.private (environment-specific private overrides)
+ *
+ * When hierarchy is disabled:
+ *   1. <activeEnvFile>
+ *   2. <activeEnvFile>.private
+ *
+ * Private files always accompany their non-private counterpart regardless
+ * of the hierarchy setting, since they contain user-specific overrides.
+ */
+function buildMergedEnv(
+  activeEnvPath: string,
+  projectPath: string,
+  envData: Record<string, Record<string, string>>,
+  useHierarchy: boolean
+): Record<string, string> {
+  const layers: Record<string, string>[] = [];
+
+  const baseEnvPath = path.join(projectPath, ".env");
+  const basePrivatePath = baseEnvPath + ".private";
+
+  if (useHierarchy) {
+    // Layer 1: base .env
+    if (envData[baseEnvPath]) layers.push(envData[baseEnvPath]);
+    // Layer 2: base .env.private
+    if (envData[basePrivatePath]) layers.push(envData[basePrivatePath]);
+  }
+
+  // Layer 3: active env (skip if it's the base itself to avoid duplication)
+  if (activeEnvPath !== baseEnvPath) {
+    if (envData[activeEnvPath]) layers.push(envData[activeEnvPath]);
+  } else if (!useHierarchy) {
+    // Hierarchy disabled and active IS the base — still load it
+    if (envData[activeEnvPath]) layers.push(envData[activeEnvPath]);
+  }
+
+  // Layer 4: active env's private counterpart
+  const activePrivatePath = activeEnvPath + ".private";
+  if (envData[activePrivatePath]) layers.push(envData[activePrivatePath]);
+
+  return Object.assign({}, ...layers);
+}
+
+/**
  * Parse the content of a .env file into an object.
  */
 function parseEnvContent(content: string) {
@@ -100,16 +160,24 @@ ipcMain.handle("env:load", async (event:IpcMainInvokeEvent) => {
     activeEnv = null;
   }
 
-  // Merge base .env with other environment files if hierarchy is enabled
+  // Build merged env using the full hierarchy chain (including .private files)
   const settings = getSettings();
-  if (settings.environment.use_hierarchy && activeEnv) {
-    const baseEnv = envs[path.join(activeProject, ".env")] || {};
-    envs[activeEnv] = {...baseEnv, ...envs[activeEnv]};
+  if (activeEnv) {
+    envs[activeEnv] = buildMergedEnv(activeEnv, activeProject, envs, settings.environment.use_hierarchy);
+  }
+
+  // Filter out .private files from the data sent to the UI —
+  // they should not appear in the environment selector
+  const visibleEnvs: Record<string, Record<string, string>> = {};
+  for (const [filePath, data] of Object.entries(envs)) {
+    if (!isPrivateEnvFile(filePath)) {
+      visibleEnvs[filePath] = data;
+    }
   }
 
   return {
     activeEnv,
-    data: envs,
+    data: visibleEnvs,
   };
 });
 
@@ -142,14 +210,9 @@ export async function replaceVariablesSecure(text: string, projectPath: string):
     return text;
   }
 
-  // Merge base .env with active env if hierarchy is enabled
+  // Build merged env using the full hierarchy chain (including .private files)
   const settings = getSettings();
-  let env = envData[activeEnvPath];
-
-  if (settings.environment.use_hierarchy) {
-    const baseEnv = envData[path.join(projectPath, ".env")] || {};
-    env = {...baseEnv, ...env};
-  }
+  const env = buildMergedEnv(activeEnvPath, projectPath, envData, settings.environment.use_hierarchy);
 
   // Replace {{VAR_NAME}} patterns
   const result = text.replace(/\{\{([^}]+)\}\}/g, (match, varName) => {
@@ -212,13 +275,9 @@ ipcMain.handle("env:resolveVariable", async (event: IpcMainInvokeEvent, variable
     return null;
   }
 
+  // Build merged env using the full hierarchy chain (including .private files)
   const settings = getSettings();
-  let env = envData[activeEnvPath];
-
-  if (settings.environment.use_hierarchy) {
-    const baseEnv = envData[path.join(activeProject, ".env")] || {};
-    env = { ...baseEnv, ...env };
-  }
+  const env = buildMergedEnv(activeEnvPath, activeProject, envData, settings.environment.use_hierarchy);
 
   const value = env[variableName.trim()];
   return value !== undefined ? value : null;
@@ -251,17 +310,11 @@ ipcMain.handle("env:getKeys", async (event:IpcMainInvokeEvent) => {
     return [];
   }
 
-  // Merge base .env keys with active env keys if hierarchy is enabled
+  // Build merged env using the full hierarchy chain (including .private files)
   const settings = getSettings();
-  let keys = Object.keys(envData[activeEnvPath]);
+  const env = buildMergedEnv(activeEnvPath, activeProject, envData, settings.environment.use_hierarchy);
 
-  if (settings.environment.use_hierarchy) {
-    const baseEnvPath = path.join(activeProject, ".env");
-    const baseKeys = envData[baseEnvPath] ? Object.keys(envData[baseEnvPath]) : [];
-    // Merge keys, removing duplicates
-    keys = [...new Set([...baseKeys, ...keys])];
-  }
-  return keys;
+  return Object.keys(env);
 });
 
 // Simple handler to extend all .env files
@@ -272,8 +325,8 @@ ipcMain.handle('env:extend-env-files', async (event, { comment, variables }) => 
     const envFiles = await findEnvFilesRecursively(activeProject);
 
     const results = [];
-    // Process each .env file
-    for (const filePath of envFiles) {
+    // Process each .env file (skip .private files — they are user-specific overrides)
+    for (const filePath of envFiles.filter(f => !isPrivateEnvFile(f))) {
       try {
         await extendEnvFile(filePath, comment, variables);
         results.push({

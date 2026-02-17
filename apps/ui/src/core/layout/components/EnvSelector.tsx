@@ -127,11 +127,12 @@ export const EnvSelector = () => {
                       )}
                     </Command.Item>
 
-                    {/* Render available environments */}
+                    {/* Render available environments (excluding .private files) */}
                     {envs?.data &&
                       Object.entries(envs.data).filter(([fileName])=>{
                        const normalizedPath = fileName.replace(/\\/g, "/");
                        const projectName = normalizedPath.split("/").pop()||normalizedPath;
+                       if (projectName.endsWith(".private")) return false;
                        return projectName.toLowerCase().includes(search.toLowerCase());
                     }).map(([fileName]) => {
                         const displayName = fileName.replace(/\\/g, "/").split("/").pop() || fileName;
