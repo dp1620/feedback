@@ -211,6 +211,16 @@ const paragraphSerializer = (state: MarkdownSerializerState, node: Node) => {
   }
 };
 
+// Inline serializer for fileLink nodes.
+// Outputs [@filename](filePath) so it survives markdown round-trips.
+// The @ prefix distinguishes file links from regular markdown links.
+const fileLinkSerializer = (state: MarkdownSerializerState, node: Node) => {
+  const filename = node.attrs.filename || "";
+  const filePath = node.attrs.filePath || "";
+  const isExternal = node.attrs.isExternal;
+  state.write(`[@${filename}](${filePath}${isExternal ? ' "external"' : ""})`);
+};
+
 const buildNodeSerializers = (schema: any) => {
   const serializers: { [node: string]: any } = {};
   Object.keys(schema.nodes).forEach((nodeName) => {
@@ -218,6 +228,8 @@ const buildNodeSerializers = (schema: any) => {
       serializers[nodeName] = codeBlockSerializer;
     } else if (nodeName === "paragraph") {
       serializers[nodeName] = paragraphSerializer;
+    } else if (nodeName === "fileLink") {
+      serializers[nodeName] = fileLinkSerializer;
     } else {
       const mappedName = nodeNameMap[nodeName] || nodeName;
       if (defaultMarkdownSerializer.nodes[mappedName]) {
@@ -568,6 +580,19 @@ const convertMdastNode = (node: any, schema?: any, definitions?: Record<string, 
     case "link": {
       // Convert link node to text node with link mark
       const text = node.children?.map((child: any) => child.value || "").join("") || "";
+
+      // Detect file links: [@filename](filePath) — text starts with @
+      if (text.startsWith("@") && text.length > 1) {
+        return {
+          type: "fileLink",
+          attrs: {
+            filePath: node.url || "",
+            filename: text.substring(1),
+            isExternal: node.title === "external",
+          },
+        };
+      }
+
       return {
         type: "text",
         text,
