@@ -102,6 +102,12 @@ export const envApi = {
    * @returns Array of variable names (no values)
    */
   getKeys: () => ipcRenderer.invoke("env:getKeys"),
+  /**
+   * Resolve a single environment variable's value for hover preview.
+   * @param variableName - The variable name to resolve
+   * @returns The variable's value, or null if not found
+   */
+  resolveVariable: (variableName: string) => ipcRenderer.invoke("env:resolveVariable", variableName),
   extendEnvs: (comment: string, variables: [{ key: string, value: string }]) => ipcRenderer.invoke('env:extend-env-files', { comment, variables })
 };
 
@@ -176,6 +182,12 @@ export const cliApi = {
 export const variablesApi = {
   getKeys: () => ipcRenderer.invoke("variables:getKeys"),
   writeVariables: (content: { [key: string]: string }) => ipcRenderer.invoke("variables:writeVariables", content),
+  /**
+   * Resolve a single process variable's value for hover preview.
+   * @param variableName - The variable name (without "process." prefix)
+   * @returns The variable's value, or null if not found
+   */
+  resolveVariable: (variableName: string) => ipcRenderer.invoke("variables:resolveVariable", variableName),
 }
 
 export const mainWindow = {

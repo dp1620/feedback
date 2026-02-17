@@ -565,6 +565,24 @@
   color: var(--variable-faker-fg);
 }
 
+/* Variable Hover Preview Tooltip */
+.tippy-box[data-theme~='variable-preview'] {
+  background-color: var(--panel, #1e1e2e);
+  border: 1px solid var(--border, #313244);
+  border-radius: 6px;
+  color: var(--text, #cdd6f4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  padding: 6px 8px;
+}
+
+.tippy-box[data-theme~='variable-preview'] .tippy-arrow {
+  color: var(--border, #313244);
+}
+
+.tippy-box[data-theme~='variable-preview'] .tippy-content {
+  padding: 0;
+}
+
 /* Websocket Send Button Cursor Styles */
 
 #ws-button,
