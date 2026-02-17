@@ -579,23 +579,23 @@ export function sanitizeName(name: string): string {
     .replace(/-+$/, "");
 }
 
-export const getFolderExists = async (activeProject?: string, rootFolderName?: string) => {
+export const getFolderExists = async (basePath?: string, rootFolderName?: string) => {
   const electronApi = window.electron;
-  const alreadExists = await electronApi!.files!.getDirectoryExist(activeProject!, sanitizeName(rootFolderName!));
+  const alreadExists = await electronApi!.files!.getDirectoryExist(basePath!, sanitizeName(rootFolderName!));
 
   return alreadExists;
 };
 
-export const getFilesExists = async (activeProject?: string, rootFolderName?: string, endpoints?: EndpointNode[]) => {
+export const getFilesExists = async (basePath?: string, rootFolderName?: string, endpoints?: EndpointNode[]) => {
   const electronApi = window.electron;
-  const alreadExists = await electronApi!.files!.getDirectoryExist(activeProject!, sanitizeName(rootFolderName!));
-  const willWriteFiles = Boolean(activeProject && electronApi?.files?.write && electronApi?.files?.createDirectory);
+  const alreadExists = await electronApi!.files!.getDirectoryExist(basePath!, sanitizeName(rootFolderName!));
+  const willWriteFiles = Boolean(basePath && electronApi?.files?.write && electronApi?.files?.createDirectory);
   if (!alreadExists || !endpoints || !willWriteFiles) {
     return false;
   } // No folder
 
   rootFolderName = sanitizeName(rootFolderName || "openapi-import");
-  const rootPath = `${activeProject}/${rootFolderName}/requests`;
+  const rootPath = `${basePath}/${rootFolderName}/requests`;
 
   for (const ep of endpoints) {
     try {
@@ -642,21 +642,34 @@ export const generateSelected = async (
     }
   }
 
+  // Convert activeSource to a project-relative path for storage in openapispecLink blocks
+  let relativeSource = activeSource;
+  if (activeProject && activeSource.startsWith(activeProject)) {
+    relativeSource = activeSource.slice(activeProject.length);
+    // Remove leading slash to make it a proper relative path
+    if (relativeSource.startsWith('/')) {
+      relativeSource = relativeSource.slice(1);
+    }
+  }
+
+  // Compute the directory containing the spec file so imports land alongside the spec
+  const specFileDir = activeSource.substring(0, activeSource.lastIndexOf('/'));
+
   // If we have a project, we write files; otherwise, open tabs.
   const willWriteFiles = Boolean(activeProject && electronApi?.files?.write && electronApi?.files?.createDirectory);
 
   // Create a predictable root folder (similar to the Postman importer flow)
   let rootFolderName = sanitizeName(opts?.rootFolderName || "openapi-import");
-  let rootPath = willWriteFiles ? `${activeProject}/${rootFolderName}` : undefined;
+  let rootPath = willWriteFiles ? `${specFileDir}/${rootFolderName}` : undefined;
 
   // Ensure folder structure
   if (willWriteFiles && rootPath) {
     // If not found or create new folder
-    const alreadyExists = await electronApi!.files!.getDirectoryExist(activeProject!, rootFolderName);
+    const alreadyExists = await electronApi!.files!.getDirectoryExist(specFileDir, rootFolderName);
     if (opts?.pickedOverwrite != 1 || !alreadyExists) {
       try {
-        rootFolderName = await electronApi!.files!.createDirectory(activeProject!, rootFolderName);
-        rootPath = `${activeProject}/${rootFolderName}`;
+        rootFolderName = await electronApi!.files!.createDirectory(specFileDir, rootFolderName);
+        rootPath = `${specFileDir}/${rootFolderName}`;
       } catch (_) {
         // ok if it already exists
       }
@@ -671,7 +684,7 @@ export const generateSelected = async (
   let i = 0;
   for (const ep of endpoints) {
     try {
-      const md = await endpointToVoidenFileContent(ep, doc,activeSource);
+      const md = await endpointToVoidenFileContent(ep, doc,relativeSource);
 
       if (willWriteFiles && rootPath) {
         const tagFolder = sanitizeName(ep.tag || "untagged");
