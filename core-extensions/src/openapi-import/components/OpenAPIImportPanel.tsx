@@ -276,7 +276,12 @@ export const OpenAPIImportPanel: React.FC<Props> = ({ context }) => {
       if (!chosen.length) return;
       const rootFolderName = apiInfo.title;
 
-      const alreadyExists = await getFilesExists(activeProject, rootFolderName, chosen);
+      // Use the directory containing the spec file as the base for imports
+      const specFileDir = activeSource
+        ? activeSource.substring(0, activeSource.lastIndexOf('/'))
+        : activeProject;
+
+      const alreadyExists = await getFilesExists(specFileDir, rootFolderName, chosen);
       if (alreadyExists && !pickedOverwrite) {
         // Show modal
         setConfirmOpen(true);
@@ -306,7 +311,7 @@ export const OpenAPIImportPanel: React.FC<Props> = ({ context }) => {
         }, 3000);
       }
     },
-    [context, doc, flatEndpoints, selected, activeProject, apiInfo.title, apiInfo.version],
+    [context, doc, flatEndpoints, selected, activeProject, activeSource, apiInfo.title, apiInfo.version],
   );
 
   // mount + event wiring (unchanged)

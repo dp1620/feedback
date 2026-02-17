@@ -53,23 +53,17 @@ export const createOpenApiSpecLink = (context: ExtendedPluginContextExplicit) =>
             }
 
             try {
-                // Use context to get active project
-                let activeProject: string | undefined;
-
-                // Try to get active project from context
                 if (!context.project) {
                     console.log('[OpenAPI] : Could not find active project.');
                     return;
                 }
-                activeProject = await context.project.getActiveProject();
 
-                // Resolve full path
-                let fullPath = filePath;
-                if (!isExternal && activeProject && !filePath.startsWith(activeProject)) {
-                    fullPath = `${activeProject}${filePath}`;
-                }
-
-                await context.project.openFile(filePath, true);
+                // filePath is stored as a project-relative path.
+                // Use skipJoin=false so openFile joins it with activeProject.
+                // For backwards compatibility with existing absolute paths,
+                // detect and handle them by using skipJoin=true.
+                const isAbsolute = filePath.startsWith('/');
+                await context.project.openFile(filePath, isAbsolute);
 
             } catch (error) {
                 console.error("Failed to open file:", error);
