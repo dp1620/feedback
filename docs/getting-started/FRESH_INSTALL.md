@@ -5,7 +5,7 @@ Complete setup guide for a fresh clone of the Voiden repository.
 ## Prerequisites
 
 - **Node.js** v21.x ([Download](https://nodejs.org/))
-- **Yarn** v4.3.1 (installed automatically, see below)
+- **Yarn** v4.3.1 (installed automatically via [Corepack](https://nodejs.org/api/corepack.html), see below)
 - **Git** (for cloning the repository)
 
 ## Quick Start
@@ -15,8 +15,8 @@ Complete setup guide for a fresh clone of the Voiden repository.
 git clone <repository-url>
 cd voiden
 
-# 2. Set Yarn version
-yarn set version 4.3.1
+# 2. Enable Corepack (ships with Node.js, installs the correct Yarn version automatically)
+corepack enable
 
 # 3. Install all dependencies
 yarn install
@@ -25,7 +25,7 @@ yarn install
 yarn workspace @voiden/core-extensions build
 
 # 5. Start the app
-yarn start
+cd apps/electron && yarn start
 ```
 
 ## Clean Rebuild (Recommended for Issues)
@@ -64,15 +64,15 @@ git clone <repository-url>
 cd voiden
 ```
 
-### Step 2: Set Yarn Version
+### Step 2: Enable Corepack
 
-The project uses Yarn v4.3.1 (Berry):
+The project uses Yarn v4.3.1 (Berry), managed via [Corepack](https://nodejs.org/api/corepack.html) which ships with Node.js. Enable it so that the correct Yarn version is installed automatically based on the `packageManager` field in `package.json`:
 
 ```bash
-yarn set version 4.3.1
+corepack enable
 ```
 
-This creates a `.yarnrc.yml` file and downloads Yarn to `.yarn/releases/`.
+This makes the `yarn` command available and ensures the correct version (v4.3.1) is used.
 
 ### Step 3: Install Dependencies
 

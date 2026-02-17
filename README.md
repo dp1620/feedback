@@ -71,7 +71,7 @@ Thanks for sharing your thoughts with us 💜
 ### Prerequisites
 
 - Node.js v21.x
-- Yarn v4.3.1
+- Yarn v4.3.1 (installed automatically via [Corepack](https://nodejs.org/api/corepack.html))
 - **Windows Only**: [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) with:
   - "Desktop development with C++" workload
   - MSVC (C++ compiler)
@@ -80,7 +80,8 @@ Thanks for sharing your thoughts with us 💜
 ```bash
 git clone https://github.com/VoidenHQ/voiden.git
 cd voiden
-yarn install 
+corepack enable
+yarn install
 yarn workspace @voiden/core-extensions build
 cd apps/electron && yarn start
 ```
