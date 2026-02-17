@@ -27,6 +27,30 @@ ipcMain.handle("variables:getKeys", async () => {
     return keys;
 });
 
+/**
+ * Resolve a single process variable's value for hover preview.
+ * @param variableName - The variable name (without "process." prefix) to resolve
+ * @returns The variable's value, or null if not found
+ */
+ipcMain.handle("variables:resolveVariable", async (_event, variableName: string) => {
+    const activeProject = await getActiveProject();
+    if (!activeProject || !variableName) {
+        return null;
+    }
+    try {
+        const filePath = activeProject + '/.voiden/.process.env.json';
+        const data = await fs.readFile(filePath, 'utf-8');
+        const variablesData = JSON.parse(data);
+        const value = variablesData[variableName.trim()];
+        return value !== undefined ? String(value) : null;
+    } catch (error: any) {
+        if (error.code !== 'ENOENT') {
+            console.error("Error reading variables file:", error);
+        }
+        return null;
+    }
+});
+
 ipcMain.handle("variables:writeVariables", async (_event, content) => {
     try {
         const activeProject = await getActiveProject();

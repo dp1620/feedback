@@ -188,6 +188,43 @@ ipcMain.handle("env:replaceVariables", async (_, text: string) => {
 });
 
 /**
+ * Resolve a single environment variable's value for hover preview.
+ * @param variableName - The variable name to resolve
+ * @returns The variable's value, or null if not found
+ */
+ipcMain.handle("env:resolveVariable", async (event: IpcMainInvokeEvent, variableName: string) => {
+  const appState = getAppState(event);
+  const activeProject = await getActiveProject();
+
+  if (!activeProject || !variableName) {
+    return null;
+  }
+
+  const activeEnvPath = appState.directories[activeProject]?.activeEnv;
+
+  if (!activeEnvPath) {
+    return null;
+  }
+
+  const envData = await loadProjectEnv(activeProject);
+
+  if (!envData[activeEnvPath]) {
+    return null;
+  }
+
+  const settings = getSettings();
+  let env = envData[activeEnvPath];
+
+  if (settings.environment.use_hierarchy) {
+    const baseEnv = envData[path.join(activeProject, ".env")] || {};
+    env = { ...baseEnv, ...env };
+  }
+
+  const value = env[variableName.trim()];
+  return value !== undefined ? value : null;
+});
+
+/**
  * Get keys (names) of environment variables for autocomplete.
  * Returns only metadata, not values.
  *

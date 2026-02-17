@@ -239,6 +239,7 @@ declare global {
         setActive: (envPath: string) => Promise<any>;
         extendEnvs:(comment:string,variables:[{key:string,value:Record<string,string>}])=>Promise<void>
         replaceVariables:(text:string)=>Promise<string>
+        resolveVariable: (variableName: string) => Promise<string | null>;
       };
       fileLink: {
         exists: (absolutePath: string) => Promise<boolean>;
@@ -267,6 +268,7 @@ declare global {
       variables:{
         getKeys: () => Promise<string[]>;
         writeVariables:(content:{[key:string]:string}) => Promise<void>;
+        resolveVariable: (variableName: string) => Promise<string | null>;
       }
     };
   }
