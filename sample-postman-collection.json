@@ -1,0 +1,346 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "Voiden Demo API",
+    "description": "A sample Postman collection for testing the Voiden import feature. Covers GET, POST, PUT, DELETE requests with headers, query params, JSON/XML bodies, form data, and auth types.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "https://jsonplaceholder.typicode.com" },
+    { "key": "apiVersion", "value": "v1" }
+  ],
+  "item": [
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users?page=1&limit=10",
+              "protocol": "https",
+              "host": ["jsonplaceholder", "typicode", "com"],
+              "path": ["users"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "debug", "value": "true", "disabled": true }
+              ]
+            },
+            "description": "Fetches a paginated list of all users."
+          }
+        },
+        {
+          "name": "Get User By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/1",
+              "protocol": "https",
+              "host": ["jsonplaceholder", "typicode", "com"],
+              "path": ["users", "1"],
+              "query": []
+            }
+          }
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" },
+              { "key": "Accept", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"username\": \"janedoe\",\n  \"email\": \"jane@example.com\",\n  \"phone\": \"555-1234\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "protocol": "https",
+              "host": ["jsonplaceholder", "typicode", "com"],
+              "path": ["users"]
+            },
+            "description": "Creates a new user with JSON body."
+          }
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Smith\",\n  \"email\": \"janesmith@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/1",
+              "protocol": "https",
+              "host": ["jsonplaceholder", "typicode", "com"],
+              "path": ["users", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/1",
+              "protocol": "https",
+              "host": ["jsonplaceholder", "typicode", "com"],
+              "path": ["users", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Posts",
+      "item": [
+        {
+          "name": "List Posts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/posts?userId=1",
+              "protocol": "https",
+              "host": ["jsonplaceholder", "typicode", "com"],
+              "path": ["posts"],
+              "query": [
+                { "key": "userId", "value": "1" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Post",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"My First Post\",\n  \"body\": \"This is the content of the post.\",\n  \"userId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/posts",
+              "protocol": "https",
+              "host": ["jsonplaceholder", "typicode", "com"],
+              "path": ["posts"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth Examples",
+      "item": [
+        {
+          "name": "Bearer Token Request",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json", "type": "text" }
+            ],
+            "url": {
+              "raw": "https://httpbin.org/bearer",
+              "protocol": "https",
+              "host": ["httpbin", "org"],
+              "path": ["bearer"]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": {
+                "token": "your-jwt-token-here"
+              }
+            },
+            "description": "Demonstrates bearer token authentication."
+          }
+        },
+        {
+          "name": "Basic Auth Request",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://httpbin.org/basic-auth/user/pass",
+              "protocol": "https",
+              "host": ["httpbin", "org"],
+              "path": ["basic-auth", "user", "pass"]
+            },
+            "auth": {
+              "type": "basic",
+              "basic": {
+                "username": "user",
+                "password": "pass"
+              }
+            }
+          }
+        },
+        {
+          "name": "API Key Auth Request",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://httpbin.org/headers",
+              "protocol": "https",
+              "host": ["httpbin", "org"],
+              "path": ["headers"]
+            },
+            "auth": {
+              "type": "apikey",
+              "apikey": {
+                "key": "X-API-Key",
+                "value": "demo-api-key-12345"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Body Formats",
+      "item": [
+        {
+          "name": "XML Body Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/xml", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<user>\n  <name>Jane Doe</name>\n  <email>jane@example.com</email>\n  <role>admin</role>\n</user>",
+              "options": {
+                "raw": {
+                  "language": "xml"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://httpbin.org/post",
+              "protocol": "https",
+              "host": ["httpbin", "org"],
+              "path": ["post"]
+            },
+            "description": "Sends an XML request body."
+          }
+        },
+        {
+          "name": "Form URL Encoded",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "username", "value": "janedoe", "type": "text" },
+                { "key": "password", "value": "secret123", "type": "text" },
+                { "key": "remember_me", "value": "true", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "https://httpbin.org/post",
+              "protocol": "https",
+              "host": ["httpbin", "org"],
+              "path": ["post"]
+            },
+            "description": "Sends a URL-encoded form body."
+          }
+        },
+        {
+          "name": "Multipart Form Data",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file_name", "value": "report.pdf", "type": "text" },
+                { "key": "description", "value": "Quarterly report upload", "type": "text" },
+                { "key": "category", "value": "finance", "type": "text" }
+              ]
+            },
+            "url": {
+              "raw": "https://httpbin.org/post",
+              "protocol": "https",
+              "host": ["httpbin", "org"],
+              "path": ["post"]
+            },
+            "description": "Sends multipart form data."
+          }
+        },
+        {
+          "name": "Plain Text Body",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "text/plain", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "Hello, this is a plain text body sent to the server.",
+              "options": {
+                "raw": {
+                  "language": "text"
+                }
+              }
+            },
+            "url": {
+              "raw": "https://httpbin.org/post",
+              "protocol": "https",
+              "host": ["httpbin", "org"],
+              "path": ["post"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Simple GET",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json", "type": "text" },
+          { "key": "X-Debug", "value": "1", "type": "text", "disabled": true }
+        ],
+        "url": {
+          "raw": "https://httpbin.org/get",
+          "protocol": "https",
+          "host": ["httpbin", "org"],
+          "path": ["get"]
+        },
+        "description": "A top-level request outside any folder."
+      }
+    }
+  ]
+}
